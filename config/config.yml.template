@@ -1,0 +1,90 @@
+# Cloudflare IP优选工具配置文件
+
+# 系统配置
+system:
+  version: "2.0.0"           # 配置版本号
+
+# IP优选配置
+ip_select:
+  custom_endpoints: false             # 是否使用自定义测速端点，设置为true时将使用下面的endpoints列表
+  endpoints: ["http://cp.cloudflare.com/"] # 自定义测速端点列表
+  endpoints_type: "http"             # 测速端点类型：http或ping，http更精准
+  custom_ip_ranges: false            # 是否使用自定义IP段，设置为true时将使用下面的ip_ranges列表
+  ip_ranges: ["173.245.48.0/20", "103.21.244.0/22"] # 自定义IP段列表
+  use_full_list: false                # 是否使用完整IP列表（速度慢但更全面）
+  filter_region: ["*"]                # 筛选地区，*为所有地区，可填写：Asia, Europe, America
+  filter_isp: ["*"]                   # 筛选运营商，*为所有ISP，可选：移动, 电信, 联通, etc.
+  ipv6: false                         # 是否测试IPv6地址，需要服务器支持IPv6
+  max_select_ip: 10                   # 每个地区最多选择IP的数量
+  max_speed_test_ip: 20               # 进行测速的IP数量
+  max_result_count: 10                # 最终结果选择的IP数量
+  
+  # IP端口配置
+  port_config:
+    enabled: true                     # 是否在结果中添加端口信息
+    default_port: 443                 # 默认端口，可选: 443, 8443, 2053, 2083, 2087, 2086
+    random_port: false                # 是否使用随机端口(从可选端口中随机选择)
+  
+  # 区域优化配置
+  regions:
+    - "AD"   # 安道尔
+    - "AE"   # 阿联酋
+    - "AF"   # 阿富汗
+    - "ALL"  # 所有地区
+
+# 测速配置
+speed_test:
+  speed_limit: 0             # 下载速度下限(MB/s)
+  latency_limit: 500         # 延迟上限(ms)
+  test_count: 0              # 测试IP数量(0=测试全部)
+  thread_num: 4              # 测速线程数
+  port: 15001                # 测速功能监听端口
+  allow_external: false      # 是否允许外部访问
+  test_url: ""               # 自定义测速地址(留空使用默认)
+
+# 上传配置
+upload:
+  # Cloudflare KV配置
+  cloudflare:
+    enabled: false           # 是否启用Cloudflare KV上传
+    domain: ""               # Cloudflare KV域名
+    token: ""                # Cloudflare KV令牌
+  
+  # GitHub Gist配置
+  github:
+    enabled: false           # 是否启用GitHub Gist上传
+    token: ""                # GitHub个人访问令牌
+    gist_id: ""              # Gist ID (如果已有Gist要更新)
+    description: "Cloudflare IP优选测速结果"
+
+# 通知配置
+notification:
+  # Telegram配置
+  telegram:
+    enabled: false           # 是否启用Telegram通知
+    bot_token: ""            # Telegram机器人Token
+    chat_id: ""              # Telegram聊天ID
+  
+  # 微信企业机器人配置
+  wechat:
+    enabled: false           # 是否启用微信企业机器人通知
+    key: ""                  # 微信企业机器人key
+
+# 定时任务配置
+schedule:
+  interval: 360              # 定时执行间隔(分钟)，默认360分钟(6小时)
+
+# 日志配置
+log:
+  directory: "logs"          # 日志文件目录
+  file: "logs/cfips.log"     # 日志文件路径
+  level: "INFO"              # 日志级别(DEBUG|INFO|WARN|ERROR|FATAL)
+  max_size: 1048576          # 最大日志文件大小(字节)
+  max_files: 5               # 最大保留的轮转日志文件数
+  console_output: true       # 是否同时输出到控制台 
+  console_verbose: false     # 控制台是否显示详细日志(设为false仅显示关键信息) 
+
+# 文件输出配置
+output:
+  format: "txt"                       # 输出格式: txt或json
+  # ... 其他输出配置 ... 

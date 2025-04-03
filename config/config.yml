@@ -1,0 +1,79 @@
+# ====== Cloudflare IP优选工具配置文件 ======
+# 此文件用于集中管理所有相关功能的配置参数
+# 在Docker环境中，可通过挂载外部config文件夹来自定义配置
+
+# ======= IP优选配置 =======
+ip_select:
+  candidate_num: 20          # 每个地区候选IP数量
+  final_num: 6               # 每个地区最终选取的IP数量
+  port: 15000                # 优选功能监听端口
+  allow_external: true       # 是否允许外部连接(默认为true以适配Docker环境)
+  
+  # 自定义IP库配置
+  custom_ips:
+    enabled: true            # 是否启用自定义IP库
+    files:
+      - "config/custom_ips.txt"  # 自定义IP文件路径(现已移动到config目录)
+  
+  # IP端口配置
+  port_config:
+    default_port: 443        # 默认端口，可选: 443, 8443, 2053, 2083, 2087, 2086
+    random_port: false       # 是否使用随机端口(从可选端口中随机选择)
+
+# ======= 测速配置 =======
+speed_test:
+  speed_limit: 0             # 下载速度下限(MB/s)
+  latency_limit: 500         # 延迟上限(ms)
+  test_count: 0              # 测试IP数量(0=测试全部)
+  thread_num: 4              # 测速线程数
+  test_url: ""               # 自定义测速地址(留空使用默认)
+  port: 15001                # 测速功能监听端口
+  allow_external: true       # 是否允许外部连接(默认为true以适配Docker环境)
+
+# ======= 结果上传配置 =======
+upload:
+  # Cloudflare KV配置
+  cloudflare:
+    enabled: false           # 是否启用Cloudflare KV上传
+    domain: "a"               # Cloudflare KV域名
+    token: ""                # Cloudflare KV令牌
+  
+  # GitHub Gist配置
+  github:
+    enabled: false           # 是否启用GitHub Gist上传
+    token: ""                # GitHub个人访问令牌
+    gist_id: ""              # Gist ID (如果已有Gist要更新)
+    description: "Cloudflare IP优选测速结果"
+  
+  # 上传文件配置
+  files:
+    default:                 # 默认上传的文件列表
+      - "cfips.txt"
+      - "result_ip.txt"
+
+# ======= 通知推送配置 =======
+notification:
+  # Telegram配置
+  telegram:
+    enabled: false           # 是否启用Telegram通知
+    bot_token: ""            # Telegram机器人Token
+    chat_id: ""              # Telegram聊天ID
+  
+  # 微信企业机器人配置
+  wechat:
+    enabled: false           # 是否启用微信企业机器人通知
+    key: ""                  # 微信企业机器人key
+
+# ======= 定时任务配置 =======
+schedule:
+  interval: 360              # 定时执行间隔(分钟)，默认360分钟(6小时)
+
+# ======= 日志配置 =======
+log:
+  directory: "logs"          # 日志文件目录
+  file: "logs/cfips.log"     # 日志文件路径
+  level: "INFO"              # 日志级别(DEBUG|INFO|WARN|ERROR|FATAL)
+  max_size: 1048576          # 最大日志文件大小(字节)
+  max_files: 5               # 最大保留的轮转日志文件数
+  console_output: true       # 是否同时输出到控制台 
+  console_verbose: false     # 控制台是否显示详细日志(设为false仅显示关键信息) 

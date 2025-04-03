@@ -1,0 +1,60 @@
+# ============================= Cloudflare IP优选工具 配置文件 =============================
+# 
+# 基本使用说明:
+# 1. 执行 `docker-compose up -d` 启动服务
+# 2. 执行 `docker-compose logs -f` 查看日志
+# 3. 结果文件保存在 `./results` 目录中
+# 4. 自定义IP文件位于 `./config/custom_ips.txt`
+# 5. 如需重新构建镜像以获取最新更新，请取消注释build选项并注释image选项
+# 6. 服务将默认以定时任务方式运行，间隔可在config.yml中设置
+# 
+# IPv6支持说明:
+# 1. 默认已配置支持IPv6网络（在networks部分）
+# 2. 系统会自动检测主机IPv6连接性，如果可用会同时测试IPv4和IPv6
+# 3. 如果不需要IPv6支持，可移除networks部分的配置，使用默认网络
+# 4. 如出现IPv6连接问题，请检查Docker daemon配置和主机防火墙设置
+#
+# 高级配置:
+# - 调整config.yml文件可以修改任务间隔、测速条件等详细参数
+# - 查看logs目录下的日志文件可获取详细执行信息
+# - 使用 `docker exec -it cfips-auto /app/start.sh` 可手动触发任务
+# =====================================================================================
+
+version: '3'
+
+# 配置网络，启用IPv6支持
+# IPv6支持使系统可同时测试IPv4和IPv6地址，获得更全面的优选结果
+networks:
+  cfips-network:
+    driver: bridge                # 使用桥接网络模式
+    enable_ipv6: true             # 启用IPv6支持
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16   # IPv4子网配置
+          gateway: 172.28.0.1     # IPv4网关地址
+        - subnet: 2001:db8::/64   # IPv6子网配置（使用保留的IPv6地址空间，实际部署时Docker会分配可用地址）
+          gateway: 2001:db8::1    # IPv6网关地址
+
+services:
+  cfips:
+    image: qiqi8699/cfips-auto:latest  # 从Docker Hub拉取镜像
+    # build: .                          # 如需使用本地构建镜像，取消此行注释并注释上面的image行
+    container_name: cfips-auto          # 容器名称，可通过此名称直接访问容器
+    ports:
+      - "15000:15000"  # IP优选端口 - 访问http://localhost:15000可手动触发IP优选
+      - "15001:15001"  # 测速端口 - 访问http://localhost:15001可手动触发测速
+    volumes:
+      - ./config:/app/config    # 配置文件目录 - 包含config.yml和custom_ips.txt
+      - ./results:/app/results  # 结果输出目录 - 存放优选和测速结果
+      - ./logs:/app/logs        # 日志目录 - 存放详细的执行日志
+    environment:
+      - TZ=Asia/Shanghai        # 设置时区，影响日志和定时任务的时间显示
+    restart: unless-stopped     # 容器退出时自动重启，除非手动停止
+    healthcheck:                # 健康检查配置，防止容器在任务完成后不断重启
+      test: ["CMD", "test", "-f", "/tmp/healthy"]  # 检查健康标记文件是否存在
+      interval: 5m              # 每5分钟检查一次
+      timeout: 10s              # 检查超时时间
+      retries: 3                # 连续失败3次后认为容器不健康
+    # 使用自定义网络以支持IPv6
+    networks:
+      - cfips-network           # 连接到上面定义的支持IPv6的网络 
